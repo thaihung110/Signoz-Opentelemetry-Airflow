@@ -75,3 +75,6 @@ vendor/
 #ignore .log files
 *.log
 
+#ignore .pyc files
+*.pyc
+
