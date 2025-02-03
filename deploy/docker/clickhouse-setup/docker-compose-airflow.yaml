@@ -1,0 +1,364 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Basic Airflow cluster configuration for CeleryExecutor with Redis and PostgreSQL.
+#
+# WARNING: This configuration is for local development. Do not use it in a production deployment.
+#
+# This configuration supports basic configuration using environment variables or an .env file
+# The following variables are supported:
+#
+# AIRFLOW_IMAGE_NAME           - Docker image name used to run Airflow.
+#                                Default: apache/airflow:2.4.1
+# AIRFLOW_UID                  - User ID in Airflow containers
+#                                Default: 50000
+# Those configurations are useful mostly in case of standalone testing/running Airflow in test/try-out mode
+#
+# _AIRFLOW_WWW_USER_USERNAME   - Username for the administrator account (if requested).
+#                                Default: airflow
+# _AIRFLOW_WWW_USER_PASSWORD   - Password for the administrator account (if requested).
+#                                Default: airflow
+# _PIP_ADDITIONAL_REQUIREMENTS - Additional PIP requirements to add when starting all containers.
+#                                Default: ''
+#
+# Feel free to modify this file to suit your needs.
+---
+version: "3"
+x-airflow-common: &airflow-common
+  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
+  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
+  # and uncomment the "build" line below, Then run docker-compose build to build the images.
+  image: apache/airflow:2.10.3
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &airflow-common-env
+    ENVIRONMENT: PRD
+    PYTHONPATH: /opt/airflow
+    AIRFLOW_VAR_ROOT_PATH: /opt/airflow/
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Ho_Chi_Minh
+    EXTERNAL_PYTHON_PATH: "/opt/airflow/external_venv"
+    AIRFLOW_VAR_MM_WEBHOOK_DBT_URL: https://teams.entrade.com.vn/hooks/m3kiej1bqigpbc5tni8x5i1dih
+    AIRFLOW_VAR_GITLAB_USERNAME: test
+    AIRFLOW_VAR_GITLAB_TOKEN: test
+    DBT_USER_CLONE_PROJECT_NAME: test
+    DBT_ENV_SECRET_DEPLOY_TOKEN: test
+    DBT_REDSHIFT_DATABASE: test
+    DBT_REDSHIFT_SCHEMA: test
+    DBT_REDSHIFT_USER: test
+    DBT_REDSHIFT_PASSWORD: test
+    DBT_REDSHIFT_HOST: test
+    AIRFLOW_VAR_DSAI_TIMESCALEDB_POSTGRES_USER: postgres
+    AIRFLOW_VAR_DSAI_TIMESCALEDB_POSTGRES_PASSWORD: nIV0JOWbNLpZuFk0lHkq1uF02AKvIryLAV9USAvkvLT9AAcoIbFK0ydZGabETOKK
+    AIRFLOW_VAR_DSAI_TIMESCALEDB_POSTGRES_SERVER: 103.151.242.52
+    AIRFLOW_VAR_DSAI_TIMESCALEDB_POSTGRES_DB: dsai
+    DBT_DATABASE: dsai
+    DBT_SCHEMA: public
+    DBT_USER: postgres
+    DBT_PASSWORD: nIV0JOWbNLpZuFk0lHkq1uF02AKvIryLAV9USAvkvLT9AAcoIbFK0ydZGabETOKK
+    DBT_TIMESCALEDB_HOST: 103.151.242.52
+    AIRFLOW_VAR_OPENAI_API_BASE: abc
+    AIRFLOW_VAR_AZOPENAI_API_KEY: abc
+    AIRFLOW_VAR_VIETSTOCK_TOKEN: 4A22D0E739614069A7E2A18F16D6DE42
+    AIRFLOW_VAR_VIETSTOCK_BASE_URL: https://vietstock.entrade.com.vn
+    AIRFLOW_VAR_WIFEED_BASE_URL: https://wifeed.vn/api
+    AIRFLOW_VAR_MATTERMOST_WEBHOOK_URL: https://teams.entrade.com.vn/hooks/test
+    AIRFLOW_VAR_BPM_CAMUDA_URL: "https://bpm-uat.entrade.com.vn/engine-rest/process-definition/ticket_ohlc_update:2:8b3a38e1-4ee1-11ed-b801-26eb39ed002d/start"
+    AIRFLOW_VAR_MATTERMOST_WEBHOOK_VSD_URL: "https://teams.entrade.com.vn/hooks/hb6qgbte6brgtybmrk6fwehtbe"
+    AIRFLOW_VAR_AIRFLOW_HOME_URL: http://localhost:8080
+    AIRFLOW_VAR_METABASE_URL: https://report-uat.entrade.com.vn
+    AIRFLOW_VAR_ENTRADE_SERVICE: https://services-uat.entrade.com.vn
+    AIRFLOW_VAR_ENTRADE_CACHE_PATH: https://services-uat.entrade.com.vn/senses-api/cache
+    AIRFLOW_VAR_ENTRADE_ADMIN_TOKEN:
+    AIRFLOW_VAR_ENTRADE_NOTICE_PATH: http://news.dainam/breaking-news/notice
+    AIRFLOW_VAR_KAFKA_DSAI: dsai-kafka-kafka-bootstrap:9092
+    AIRFLOW_VAR_CHART_SECURITIES_TTDT_ID: 3f292dd2-7a3f-47b7-8684-e58658702da1
+    AIRFLOW_VAR_CHART_SECURITIES_TTLN_ID: a2912dd0-9cff-42cb-821f-4c9516d223dc
+    AIRFLOW_VAR_CHART_SECURITIES_CCTS_ID: fe16a8e6-3a1b-479a-9f20-3b6e4c6c862f
+    AIRFLOW_VAR_CHART_SECURITIES_CCNV_ID: 9798c401-bf89-4f70-8672-c2ac4deef44e
+    AIRFLOW_VAR_CHART_BANK_TTDT_ID: c25c1643-466c-4025-9ff7-67d0418cf890
+    AIRFLOW_VAR_CHART_BANK_TTLN_ID: 41021650-89df-4f02-afbd-a374b70002ed
+    AIRFLOW_VAR_CHART_BANK_CCTS_ID: 251a27f7-f455-49b8-86a2-edab613c9c5d
+    AIRFLOW_VAR_CHART_BANK_CCNV_ID: c97b0fae-d55a-4254-8fd4-d3f674bb7dfe
+    AIRFLOW_VAR_CHART_INSURANCE_TTDT_ID: 6c28ff31-cc6e-4b86-8ce2-dfaefb9f8738
+    AIRFLOW_VAR_CHART_INSURANCE_TTLN_ID: c911176b-d329-447c-900f-40bc85554cdd
+    AIRFLOW_VAR_CHART_INSURANCE_CCTS_ID: 438bdd65-5b51-4980-9b53-3e265666abdb
+    AIRFLOW_VAR_CHART_INSURANCE_CCNV_ID: baba8581-fac1-431c-ac0a-b5dc79baffa9
+    AIRFLOW_VAR_CHART_DNSX_TTDT_ID: 79aaea23-2d7f-4831-ac76-6226aa02b366
+    AIRFLOW_VAR_CHART_DNSX_TTLN_ID: 5c367adb-f742-4a83-9519-3f623575aa8b
+    AIRFLOW_VAR_CHART_DNSX_CCTS_ID: 65cac496-d549-4435-ad44-c59af9ed6a27
+    AIRFLOW_VAR_CHART_DNSX_CCNV_ID: a99fa513-4c34-4dc0-a7f4-ff87fb299310
+    AIRFLOW_VAR_SENSE_CONNECTION_STR: postgresql://sense:Aem5vGQY3ACHmrFb4pimK65qcBl6gMwPDY9A0xhVioTl2idn7R883lxmzchNbwOS@103.151.242.58:5432/sense
+    AIRFLOW_VAR_OPENAI_API_KEY: test
+    AIRFLOW_VAR_SENSE_ARTICLES_TABLE: articles
+    AIRFLOW_VAR_SENSE_STOCK_NEWS_TABLE: stock_news
+    AIRFLOW_VAR_SENSE_SCHEMA: public
+    AIRFLOW_VAR_START_ARTICLE_ID: 30000000
+    AIRFLOW_VAR_WIFEED_API_KEY: test
+    AIRFLOW_CONN_ENCAP_DATA_S3: test
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW_CONN_TIMESCALEDB_PRD: postgresql://postgres:nIV0JOWbNLpZuFk0lHkq1uF02AKvIryLAV9USAvkvLT9AAcoIbFK0ydZGabETOKK@103.151.242.52:5432/dsai
+    AIRFLOW_VAR_ENCAP_DATA_S3_BUCKET: encap-data-test
+    AIRFLOW_CONN_REDSHIFT_PRD: test
+    AIRFLOW_CONN_SENSE_DB: postgresql://sense:Aem5vGQY3ACHmrFb4pimK65qcBl6gMwPDY9A0xhVioTl2idn7R883lxmzchNbwOS@103.151.242.58:5432/sense
+    AIRFLOW_CONN_REDIS_CACHE: redis://:@redis:6379/0
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    # For backward compatibility, with Airflow <2.3
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+    AIRFLOW_VAR_GCS_ENTRADE_SENSE_BUCKET_NAME: "cdn-entrade"
+    AIRFLOW_VAR_GCS_ENTRADE_SENSE_FOLDER_NAME: "dnse-sense-uat"
+    AIRFLOW_VAR_AIRBYTE_MARKET_CONNECTION_ID: "market-conn-id"
+    AIRFLOW_VAR_GPT_4O_MINI_KEY: test
+    AIRFLOW__METRICS__OTEL_ON: True
+    AIRFLOW__METRICS__OTEL_HOST: host.docker.internal
+    AIRFLOW__METRICS__OTEL_PORT: 4318
+    AIRFLOW__METRICS__OTEL_INTERVAL_MILLISECONDS: 30000
+    AIRFLOW__TRACES__OTEL_ON: True
+    AIRFLOW__TRACES__OTEL_HOST: host.docker.internal
+    AIRFLOW__TRACES__OTEL_PORT: 4318
+    AIRFLOW__TRACES__OTEL_DEBUGGING_ON: False
+    AIRFLOW__TRACES__OTEL_TASK_LOG_EVENT: True
+
+  volumes:
+    - ./json_data:/opt/airflow/json_data
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./generators:/opt/airflow/generators
+    - ./miners:/opt/airflow/miners
+    - ./storage:/opt/airflow/storage
+    - ./plugins:/opt/airflow/plugins
+    - ./streams:/opt/airflow/streams
+    - ./common:/opt/airflow/common
+    - ./template:/opt/airflow/template
+    - ./producer:/opt/airflow/producer
+    - ./config:/opt/airflow/config
+
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:latest
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    # yamllint disable rule:line-length
+    command:
+      - -c
+      - |
+        if [[ -z "${AIRFLOW_UID}" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+          echo "If you are on Linux, you SHOULD follow the instructions below to set "
+          echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
+          echo "For other operating systems you can get rid of the warning with manually created .env file:"
+          echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
+          echo
+        fi
+        one_meg=1048576
+        mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
+        cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
+        disk_available=$$(df / | tail -1 | awk '{print $$4}')
+        warning_resources="false"
+        if (( mem_available < 4000 )) ; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
+          echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
+          echo
+          warning_resources="true"
+        fi
+        if (( cpus_available < 2 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
+          echo "At least 2 CPUs recommended. You have $${cpus_available}"
+          echo
+          warning_resources="true"
+        fi
+        if (( disk_available < one_meg * 10 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
+          echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
+          echo
+          warning_resources="true"
+        fi
+        if [[ $${warning_resources} == "true" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resources available:"
+          echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
+          echo
+        fi
+        mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    # yamllint enable rule:line-length
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+    user: "0:0"
+    volumes:
+      - .:/sources
+
+  airflow-cli:
+    <<: *airflow-common
+    profiles:
+      - debug
+    environment:
+      <<: *airflow-common-env
+      CONNECTION_CHECK_MAX_COUNT: "0"
+    # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
+    command:
+      - bash
+      - -c
+      - airflow
+
+  # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
+  # or by explicitly targeted on the command line e.g. docker-compose up flower.
+  # See: https://docs.docker.com/compose/profiles/
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    profiles:
+      - flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-db-volume:

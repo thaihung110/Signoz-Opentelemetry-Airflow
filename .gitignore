@@ -70,3 +70,8 @@ vendor/
 
 # git-town
 .git-branches.toml
+
+
+#ignore .log files
+*.log
+
