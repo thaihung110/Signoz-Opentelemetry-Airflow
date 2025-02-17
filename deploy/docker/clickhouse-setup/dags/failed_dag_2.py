@@ -15,7 +15,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="sample_dag_1",
+    dag_id="failed_task_dag_2",
     default_args=default_args,
     schedule_interval=timedelta(
         minutes=2

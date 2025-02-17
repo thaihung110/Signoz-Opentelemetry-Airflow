@@ -1,12 +1,15 @@
-# Sử dụng image chính thức của Apache Airflow
-FROM apache/airflow:2.4.1
+# =============================================================================
+# dockefile for building airflow
+
+# change version from 2.4.1 to 2.7.3
+FROM apache/airflow:2.7.3
 
 # Đặt biến môi trường cho Airflow
 ENV AIRFLOW_HOME=/opt/airflow
 
-# Cài đặt các dependencies cần thiết
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
+USER root
+RUN pip install apache-airflow-providers-elasticsearch
+USER airflow
 
 # Cài đặt OpenTelemetry và các gói liên quan
 RUN pip install --no-cache-dir \
@@ -15,21 +18,24 @@ RUN pip install --no-cache-dir \
     opentelemetry-exporter-otlp==1.20.0
 RUN pip install 'apache-airflow[otel]'
 
-# Sao chép các DAGs, plugins và thư mục cần thiết vào container
-# COPY dags/ $AIRFLOW_HOME/dags/
-# COPY plugins/ $AIRFLOW_HOME/plugins/
-# COPY json_data/ $AIRFLOW_HOME/json_data/
-# COPY generators/ $AIRFLOW_HOME/generators/
-# COPY miners/ $AIRFLOW_HOME/miners/
-# COPY storage/ $AIRFLOW_HOME/storage/
-# COPY streams/ $AIRFLOW_HOME/streams/
-# COPY common/ $AIRFLOW_HOME/common/
-# COPY template/ $AIRFLOW_HOME/template/
-# COPY producer/ $AIRFLOW_HOME/producer/
-# COPY config/ $AIRFLOW_HOME/config/
+# install opentelemetry-exporter-otlp-proto-http
+RUN pip install opentelemetry-exporter-otlp-proto-http
+
+# Add airflow user to root group
+RUN usermod -a -G root airflow
+
+# Set umask to make files writable by group
+RUN echo "umask 0002" >> /home/airflow/.bashrc
+
+# Create log directory and set permissions
+RUN mkdir -p /opt/airflow/logs && \
+    chown -R root:root /opt/airflow/logs && \
+    chmod -R 777 /opt/airflow/logs
 
 # Chuyển đổi entrypoint để sử dụng airflow command
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Đặt lệnh mặc định khi container chạy
 CMD ["webserver"]
+
+# =============================================================================

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
 
@@ -15,7 +16,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="sample_dag_1",
+    dag_id="failed_task_dag_1",
     default_args=default_args,
     schedule_interval=timedelta(
         minutes=2
@@ -23,7 +24,15 @@ with DAG(
     catchup=False,
 ) as dag:
 
+    # Start the workflow
+    start = BashOperator(
+        task_id="start",
+        bash_command='echo "Starting OpenTelemetry test workflow"',
+    )
+
     task1 = PythonOperator(
         task_id="fail_task",
         python_callable=fail_task,
     )
+
+    start >> task1
