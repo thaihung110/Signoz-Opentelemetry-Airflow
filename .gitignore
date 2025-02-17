@@ -78,3 +78,5 @@ vendor/
 #ignore .pyc files
 *.pyc
 
+airflow.cfg
+
