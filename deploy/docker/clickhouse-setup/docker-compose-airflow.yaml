@@ -1,75 +1,19 @@
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
-
-# Basic Airflow cluster configuration for CeleryExecutor with Redis and PostgreSQL.
-#
-# WARNING: This configuration is for local development. Do not use it in a production deployment.
-#
-# This configuration supports basic configuration using environment variables or an .env file
-# The following variables are supported:
-#
-# AIRFLOW_IMAGE_NAME           - Docker image name used to run Airflow.
-#                                Default: apache/airflow:2.4.1
-# AIRFLOW_UID                  - User ID in Airflow containers
-#                                Default: 50000
-# Those configurations are useful mostly in case of standalone testing/running Airflow in test/try-out mode
-#
-# _AIRFLOW_WWW_USER_USERNAME   - Username for the administrator account (if requested).
-#                                Default: airflow
-# _AIRFLOW_WWW_USER_PASSWORD   - Password for the administrator account (if requested).
-#                                Default: airflow
-# _PIP_ADDITIONAL_REQUIREMENTS - Additional PIP requirements to add when starting all containers.
-#                                Default: ''
-#
-# Feel free to modify this file to suit your needs.
 ---
-version: "3"
 x-airflow-common: &airflow-common
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run docker-compose build to build the images.
   image: apache/airflow:2.10.3
-  build:
-    context: .
-    dockerfile: Dockerfile
+  # build:
+  #   context: .
+  #   dockerfile: Dockerfile
   environment: &airflow-common-env
     ENVIRONMENT: PRD
     PYTHONPATH: /opt/airflow
     AIRFLOW_VAR_ROOT_PATH: /opt/airflow/
     AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Ho_Chi_Minh
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-
-    # Thêm biến môi trường để đảm bảo permissions
     AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
-    # AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT: 8793
-
-    # AIRFLOW__ELASTICSEARCH__WRITE_STDOUT: True
-
-    # AIRFLOW__LOGGING__TASK_LOG_READER: stdout
-    # AIRFLOW__LOGGING__REMOTE_LOGGING: "False"
-    # AIRFLOW__LOGGING__TASK_LOG_PREFIX_TEMPLATE: "{{ ti.dag_id }}/{{ ti.task_id }}/{{ ts }}/{{ try_number }}.log"
-
-    # # Ghi log ra stdout để hiển thị trên container logs
-    # AIRFLOW__LOGGING__HANDLER: airflow.utils.log.file_task_handler.FileTaskHandler
-
-    # # Cấu hình logging hiển thị trên stdout
-    # AIRFLOW__LOGGING__WORKER_STDOUT_LOG_FORMAT: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    # AIRFLOW__LOGGING__WORKER_LOG_FORMAT: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -93,24 +37,10 @@ x-airflow-common: &airflow-common
     AIRFLOW__TRACES__OTEL_DEBUGGING_ON: False
     AIRFLOW__TRACES__OTEL_TASK_LOG_EVENT: True
 
-    # Cấu hình Elasticsearch logging
-    AIRFLOW__CORE__LOGGING_LEVEL: ERROR
-    AIRFLOW__CORE__REMOTE_LOGGING: "True"
-    AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER: "http://elasticsearch:9200"
-    AIRFLOW__CORE__REMOTE_LOG_CONN_ID: "elasticsearch_default"
-
-    # Cấu hình để ghi log ra stdout
-    AIRFLOW__ELASTICSEARCH__HOST: "http://elasticsearch:9200"
-    AIRFLOW__ELASTICSEARCH__LOG_ID_TEMPLATE: "{{dag_id}}-{{task_id}}-{{execution_date}}-{{try_number}}"
-    AIRFLOW__ELASTICSEARCH__END_OF_LOG_MARK: "end_of_log"
-    AIRFLOW__ELASTICSEARCH__WRITE_STDOUT: "True"
-    AIRFLOW__ELASTICSEARCH__JSON_FORMAT: "True"
-    AIRFLOW__ELASTICSEARCH__JSON_FIELDS: "asctime, filename, lineno, levelname, message"
-
   volumes:
     - ./json_data:/opt/airflow/json_data
     - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs:rw
+    - ./logs:/opt/airflow/logs
     - ./generators:/opt/airflow/generators
     - ./miners:/opt/airflow/miners
     - ./storage:/opt/airflow/storage
@@ -129,26 +59,6 @@ x-airflow-common: &airflow-common
       condition: service_healthy
 
 services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.27
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
   postgres:
     image: postgres:13
     environment:
@@ -237,8 +147,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
-      elasticsearch:
-        condition: service_healthy
+      # elasticsearch:
+      #   condition: service_healthy
 
   airflow-triggerer:
     <<: *airflow-common
@@ -362,4 +272,4 @@ services:
 
 volumes:
   postgres-db-volume:
-  elasticsearch-data:
+  # elasticsearch-data:

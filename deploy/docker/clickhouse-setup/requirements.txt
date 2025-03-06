@@ -1,0 +1,7 @@
+faust-streaming
+opentelemetry-exporter-otlp[grpc,http]
+opentelemetry-api 
+opentelemetry-sdk
+opentelemetry-distro
+opentelemetry-instrumentation-kafka-python 
+kafka-python

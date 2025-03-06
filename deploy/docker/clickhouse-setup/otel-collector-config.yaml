@@ -1,4 +1,21 @@
 receivers:
+  filelog:
+    include:
+      - /opt/airflow/logs/*/*/*/*.log
+    include_file_path: true
+    start_at: beginning
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<sev>[A-Z]*) (?P<msg>.*)$'
+        timestamp:
+          parse_from: attributes.time
+          layout: "%Y-%m-%d %H:%M:%S"
+        severity:
+          parse_from: attributes.sev
+    multiline:
+      line_start_pattern: '^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}.*\]' # Dòng bắt đầu bằng timestamp
+      omit_pattern: false # Giữ nguyên log đầy đủ, không bỏ timestamp
+
   tcplog/docker:
     listen_address: "0.0.0.0:2255"
     operators:
@@ -181,6 +198,6 @@ service:
       processors: [batch]
       exporters: [clickhousemetricswrite/prometheus, clickhousemetricswritev2]
     logs:
-      receivers: [otlp, tcplog/docker]
+      receivers: [filelog, tcplog/docker, otlp]
       processors: [batch]
       exporters: [clickhouselogsexporter]
